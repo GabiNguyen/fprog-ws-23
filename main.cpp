@@ -74,30 +74,6 @@ auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<st
     return wordCounts;
 };
 
-// auto parallelCountOccurrences = [](const std::vector<std::string>& words) -> std::map<std::string, int> {
-//     const int numThreads = std::thread::hardware_concurrency();
-//     std::vector<std::future<std::map<std::string, int>>> futures;
-//     const int chunkSize = words.size() / numThreads;
-//     auto chunkStart = words.begin();
-//     auto chunkEnd = chunkStart + chunkSize;
-//     for (int i = 0; i < numThreads; ++i) {
-//         if (i == numThreads - 1) {
-//             chunkEnd = words.end();
-//         }
-//         futures.push_back(std::async(std::launch::async, countOccurrences, std::vector<std::string>(chunkStart, chunkEnd)));
-//         chunkStart = chunkEnd;
-//         chunkEnd += chunkSize;
-//     }
-//     std::map<std::string, int> wordCounts;
-//     for (auto& future : futures) {
-//         auto chunkCounts = future.get();
-//         for (const auto& [word, count] : chunkCounts) {
-//             wordCounts[word] += count;
-//         }
-//     }
-//     return wordCounts;
-// };
-
 int main() {
     // std::vector<std::string> bookLines = readFile("book.in");
     // std::vector<std::string> warTermsLines = readFile("war_terms.in");
@@ -131,11 +107,7 @@ int main() {
     // return 0;
 
     std::vector<std::string> bookLines = readFile("file.txt");
-
-    // for (const auto& line : bookLines) {
-    //     std::cout << line << std::endl;
-    // }
-
+    
     std::vector<std::string> bookWords;
     for (const auto& line : bookLines) {
         std::vector<std::string> tokens = tokenizeText(line);

@@ -66,6 +66,9 @@ auto filterWords = [](const std::vector<std::string>& words, const std::vector<s
     return std::make_pair(peaceWords, warWords);
 };
 
+// mapping -> dictionary -> shuffle -> reduce
+// all of standard library
+
 auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<std::string, int> {
     std::map<std::string, int> wordCounts;
     std::for_each(words.begin(), words.end(), [&](const std::string& word) {
@@ -74,72 +77,33 @@ auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<st
     return wordCounts;
 };
 
-int main() {
-    // std::vector<std::string> bookLines = readFile("book.in");
-    // std::vector<std::string> warTermsLines = readFile("war_terms.in");
-    // std::vector<std::string> peaceTermsLines = readFile("peace_terms.in");
-
-    // std::vector<std::string> bookWords;
-    // for (const auto& line : bookLines) {
-    //     std::vector<std::string> tokens = tokenizeText(line);
-    //     bookWords.insert(bookWords.end(), tokens.begin(), tokens.end());
-    // }
-
-    // std::vector<std::string> warTermsWords;
-    // for (const auto& line : warTermsLines) {
-    //     std::vector<std::string> tokens = tokenizeText(line);
-    //     warTermsWords.insert(warTermsWords.end(), tokens.begin(), tokens.end());
-    // }
-
-    // std::vector<std::string> peaceTermsWords;
-    // for (const auto& line : peaceTermsLines) {
-    //     std::vector<std::string> tokens = tokenizeText(line);
-    //     peaceTermsWords.insert(peaceTermsWords.end(), tokens.begin(), tokens.end());
-    // }
-
-    // std::ranges::copy(bookWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-    // std::cout << std::endl;
-    // std::ranges::copy(warTermsWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-    // std::cout << std::endl;
-    // std::ranges::copy(peaceTermsWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-    // std::cout << std::endl;
-
-    // return 0;
-
-    std::vector<std::string> bookLines = readFile("file.txt");
+auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
     
+};
+
+int main() {
+    std::vector<std::string> bookLines = readFile("book.in");
+    std::vector<std::string> warTermsLines = readFile("war_terms.in");
+    std::vector<std::string> peaceTermsLines = readFile("peace_terms.in");
+
     std::vector<std::string> bookWords;
     for (const auto& line : bookLines) {
         std::vector<std::string> tokens = tokenizeText(line);
         bookWords.insert(bookWords.end(), tokens.begin(), tokens.end());
     }
 
-    std::ranges::copy(bookWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-
-    std::vector<std::string> peaceTerms = {"peace", "love", "harmony"};
-    std::vector<std::string> warTerms = {"war", "hate", "chaos"};
-
-    auto [peaceWords, warWords] = filterWords(bookWords, peaceTerms, warTerms);
-
-    std::cout << "Peace words:" << std::endl;
-    std::ranges::copy(peaceWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-    std::cout << std::endl;
-
-    std::cout << "War words:" << std::endl;
-    std::ranges::copy(warWords, std::ostream_iterator<std::string>(std::cout, "\n"));
-    std::cout << std::endl;
-
-    std::map<std::string, int> peaceWordCounts = countOccurrences(peaceWords);
-    std::map<std::string, int> warWordCounts = countOccurrences(warWords);
-
-    std::cout << "Peace word counts:" << std::endl;
-    for (const auto& [word, count] : peaceWordCounts) {
-        std::cout << word << ": " << count << std::endl;
+    std::vector<std::string> warTermsWords;
+    for (const auto& line : warTermsLines) {
+        std::vector<std::string> tokens = tokenizeText(line);
+        warTermsWords.insert(warTermsWords.end(), tokens.begin(), tokens.end());
     }
 
-    std::cout << "War word counts:" << std::endl;
-    for (const auto& [word, count] : warWordCounts) {
-        std::cout << word << ": " << count << std::endl;
+    std::vector<std::string> peaceTermsWords;
+    for (const auto& line : peaceTermsLines) {
+        std::vector<std::string> tokens = tokenizeText(line);
+        peaceTermsWords.insert(peaceTermsWords.end(), tokens.begin(), tokens.end());
     }
+
+    return 0;
 
 }

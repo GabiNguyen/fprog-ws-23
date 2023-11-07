@@ -38,6 +38,29 @@ auto tokenizeText = [](const std::string& text) -> std::vector<std::string> {
     return tokens;
 };
 
+//split the text into chapters
+auto split_in_chapters = [](const std::vector<std::string>& lines) -> std::vector<std::vector<std::string>> {
+    std::vector<std::vector<std::string>> chapters;
+    std::string chapter;
+    bool found_first = false;
+    std::ranges::for_each(lines, [&](const std::string& line) {
+        if (line.find("CHAPTER") != std::string::npos) {
+            if (!chapter.empty() && found_first) {
+                found_first = true;
+                chapters.push_back(tokenizeText(chapter));
+                chapter.clear();
+            }
+        }
+        chapter+=line;
+    });
+    if (!chapter.empty()) {
+        chapters.push_back(tokenizeText(chapter));
+    }
+    return chapters;
+};
+
+
+
 // auto filterWords = [](const std::vector<std::string>& words, const std::vector<std::string>& peaceTerms, const std::vector<std::string>& warTerms) -> std::vector<std::string> {
 //     auto isFiltered = [&](const std::string& word) -> bool {
 //         return std::ranges::any_of(peaceTerms, [&](const std::string& term) { return word == term; }) || std::ranges::any_of(warTerms, [&](const std::string& term) { return word == term; });

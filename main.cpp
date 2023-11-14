@@ -78,7 +78,16 @@ auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<st
 };
 
 auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
-    
+    auto isTerm = [&](const std::string& word) -> bool {
+        return std::ranges::any_of(terms, [&](const std::string& term) { return word == term; });
+    };
+    int termCount = 0;
+    std::ranges::for_each(words, [&](const std::string& word) {
+        if (isTerm(word)) {
+            ++termCount;
+        }
+    });
+    return static_cast<double>(termCount) / words.size();
 };
 
 int main() {

@@ -26,7 +26,7 @@ auto tokenizeText = [](const std::string& text) -> std::vector<std::string> {
     std::string token;
     std::for_each(text.begin(), text.end(), [&](char c) {
         if (std::isalpha(c)) {
-            token += std::tolower(c);
+            token += c;
         } else if (!token.empty()) {
             tokens.push_back(token);
             token.clear();
@@ -43,7 +43,7 @@ auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::v
     std::vector<std::string> chapter;
     // split chapters and put into chapters vector by finding the word first "chapter" and ending the chapter when the next "chapter" is found
     std::ranges::for_each(bookWords, [&](const std::string& word) {
-        if (word.find("chapter") != std::string::npos) {
+        if (word.find("CHAPTER") != std::string::npos) {
             if (!chapter.empty()) {
                 chapters.push_back(chapter);
                 chapter.clear();

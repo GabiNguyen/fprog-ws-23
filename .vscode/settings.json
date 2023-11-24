@@ -46,7 +46,8 @@
         "memory": "cpp",
         "memory_resource": "cpp",
         "numeric": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "map": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++-10"
 }

@@ -38,47 +38,45 @@ auto tokenizeText = [](const std::string& text) -> std::vector<std::string> {
     return tokens;
 };
 
-//split the text into chapters
-auto split_in_chapters = [](const std::vector<std::string>& lines) -> std::vector<std::vector<std::string>> {
+auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::vector<std::vector<std::string>> {
     std::vector<std::vector<std::string>> chapters;
-    std::string chapter;
-    bool found_first = false;
-    std::ranges::for_each(lines, [&](const std::string& line) {
-        if (line.find("CHAPTER") != std::string::npos) {
-            if (!chapter.empty() && found_first) {
-                found_first = true;
-                chapters.push_back(tokenizeText(chapter));
+    std::vector<std::string> chapter;
+    // split chapters and put into chapters vector by finding the word first "chapter" and ending the chapter when the next "chapter" is found
+    std::ranges::for_each(bookWords, [&](const std::string& word) {
+        if (word.find("chapter") != std::string::npos) {
+            if (!chapter.empty()) {
+                chapters.push_back(chapter);
                 chapter.clear();
             }
         }
-        chapter+=line;
+        chapter.push_back(word);
     });
     if (!chapter.empty()) {
-        chapters.push_back(tokenizeText(chapter));
+        chapters.push_back(chapter);
     }
+    //remove the first chapter because it is the title
+    chapters.erase(chapters.begin());
+
+    // std::vector<std::string> lastChapter = chapters.back();
+    // // remove everything after the string "end of the project gutenberg ebook"
+    // auto lastChapter = std::search(lastChapter.begin(), lastChapter.end(), ("end of the project gutenberg ebook"));
+    // lastChapter.erase(lastChapter.begin(), lastChapter.end());
+
     return chapters;
 };
 
-
-
-// auto filterWords = [](const std::vector<std::string>& words, const std::vector<std::string>& peaceTerms, const std::vector<std::string>& warTerms) -> std::vector<std::string> {
-//     auto isFiltered = [&](const std::string& word) -> bool {
-//         return std::ranges::any_of(peaceTerms, [&](const std::string& term) { return word == term; }) || std::ranges::any_of(warTerms, [&](const std::string& term) { return word == term; });
-//     };
-//     std::vector<std::string> filteredWords;
-//     std::ranges::copy_if(words, std::back_inserter(filteredWords), [&](const std::string& word) { return !isFiltered(word); });
-//     return filteredWords;
-// };
-
 auto filterWords = [](const std::vector<std::string>& words, const std::vector<std::string>& peaceTerms, const std::vector<std::string>& warTerms) -> std::pair<std::vector<std::string>, std::vector<std::string>> {
+    
     auto isPeaceTerm = [&](const std::string& word) -> bool {
         return std::ranges::any_of(peaceTerms, [&](const std::string& term) { return word == term; });
     };
     auto isWarTerm = [&](const std::string& word) -> bool {
         return std::ranges::any_of(warTerms, [&](const std::string& term) { return word == term; });
     };
+
     std::vector<std::string> peaceWords;
     std::vector<std::string> warWords;
+
     std::ranges::for_each(words, [&](const std::string& word) {
         if (isPeaceTerm(word)) {
             peaceWords.push_back(word);
@@ -86,8 +84,10 @@ auto filterWords = [](const std::vector<std::string>& words, const std::vector<s
             warWords.push_back(word);
         }
     });
+
     return std::make_pair(peaceWords, warWords);
 };
+
 
 // mapping -> dictionary -> shuffle -> reduce
 // all of standard library
@@ -100,17 +100,21 @@ auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<st
     return wordCounts;
 };
 
+// auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
+//     auto isTerm = [&](const std::string& word) -> bool {
+//         return std::ranges::any_of(terms, [&](const std::string& term) { return word == term; });
+//     };
+//     int termCount = 0;
+//     std::ranges::for_each(words, [&](const std::string& word) {
+//         if (isTerm(word)) {
+//             ++termCount;
+//         }
+//     });
+//     return static_cast<double>(termCount) / words.size();
+// };
+
 auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
-    auto isTerm = [&](const std::string& word) -> bool {
-        return std::ranges::any_of(terms, [&](const std::string& term) { return word == term; });
-    };
-    int termCount = 0;
-    std::ranges::for_each(words, [&](const std::string& word) {
-        if (isTerm(word)) {
-            ++termCount;
-        }
-    });
-    return static_cast<double>(termCount) / words.size();
+    return static_cast<double>(terms.size()) / words.size();
 };
 
 int main() {
@@ -136,6 +140,31 @@ int main() {
         peaceTermsWords.insert(peaceTermsWords.end(), tokens.begin(), tokens.end());
     }
 
-    return 0;
+    std::vector<std::vector<std::string>> chapters = splitIntoChapters(bookWords);
 
+    // std::vector<double> peaceDensities;
+    // std::vector<double> warDensities;
+
+    int chapterNumber = 1;
+
+    for (const auto& chapter : chapters) {
+        auto [peaceWords, warWords] = filterWords(chapter, peaceTermsWords, warTermsWords);
+        double peaceDensity = calculateTermDensity(chapter, peaceWords);
+        double warDensity = calculateTermDensity(chapter, warWords);
+        // peaceDensities.push_back(peaceDensity);
+        // warDensities.push_back(warDensity);
+
+        std::cout << "Chapter " << chapterNumber << ": ";
+
+        if (warDensity > peaceDensity) {
+            std::cout << "war-related\n";
+        } else {
+            std::cout << "peace-related\n";
+        }
+
+        chapterNumber++;
+    }
+
+    return 0;
 }
+

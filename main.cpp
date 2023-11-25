@@ -10,9 +10,10 @@
 #include <optional>
 
 auto readFile = [](const std::string& filename) -> std::optional<std::vector<std::string>> {
+    //check if the file exists
     std::ifstream file(filename);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open file");
+        return std::nullopt;
     }
 
     // chek if the file is empty
@@ -20,6 +21,7 @@ auto readFile = [](const std::string& filename) -> std::optional<std::vector<std
         return std::nullopt;
     }
 
+    // read the file line by line and put the lines into a vector and get out of the loop when the end of the book is reached
     std::vector<std::string> lines;
     std::string line;
     while (std::getline(file, line)) {
@@ -67,11 +69,6 @@ auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::v
     //remove the first chapter because it is the title
     chapters.erase(chapters.begin());
 
-    // std::vector<std::string> lastChapter = chapters.back();
-    // // remove everything after the string "end of the project gutenberg ebook"
-    // auto lastChapter = std::search(lastChapter.begin(), lastChapter.end(), ("end of the project gutenberg ebook"));
-    // lastChapter.erase(lastChapter.begin(), lastChapter.end());
-
     return chapters;
 };
 
@@ -98,33 +95,26 @@ auto filterWords = [](const std::vector<std::string>& words, const std::vector<s
     return std::make_pair(peaceWords, warWords);
 };
 
-
-// mapping -> dictionary -> shuffle -> reduce
-// all of standard library
-
-auto countOccurrences = [](const std::vector<std::string>& words) -> std::map<std::string, int> {
-    std::map<std::string, int> wordCounts;
-    std::for_each(words.begin(), words.end(), [&](const std::string& word) {
-        ++wordCounts[word];
-    });
-    return wordCounts;
-};
-
-// auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
-//     auto isTerm = [&](const std::string& word) -> bool {
-//         return std::ranges::any_of(terms, [&](const std::string& term) { return word == term; });
-//     };
-//     int termCount = 0;
-//     std::ranges::for_each(words, [&](const std::string& word) {
-//         if (isTerm(word)) {
-//             ++termCount;
-//         }
-//     });
-//     return static_cast<double>(termCount) / words.size();
-// };
-
 auto calculateTermDensity = [](const std::vector<std::string>& words, const std::vector<std::string>& terms) -> double {
     return static_cast<double>(terms.size()) / words.size();
+};
+
+auto categorize_chapters = [](const std::vector<std::vector<std::string>>& chapters, const std::vector<std::string>& peaceTerms, const std::vector<std::string>& warTerms) -> void {
+
+    auto indexes = std::ranges::views::iota(0, std::ranges::ssize(chapters)-1);
+    std::ranges::for_each(indexes, [&chapters, &peaceTerms, &warTerms](int i) -> void {
+        auto [peaceWords, warWords] = filterWords(chapters[i], peaceTerms, warTerms);
+        double peaceDensity = calculateTermDensity(chapters[i], peaceWords);
+        double warDensity = calculateTermDensity(chapters[i], warWords);
+
+        std::cout << "Chapter " << i << ": ";
+        if (warDensity > peaceDensity) {
+            std::cout << "war-related\n";
+        } else {
+            std::cout << "peace-related\n";
+        }
+    });
+
 };
 
 int main() {
@@ -134,7 +124,7 @@ int main() {
     std::cin >> filename;
     std::optional<std::vector<std::string>> bookLines = readFile(filename);
     if (bookLines == std::nullopt) {
-        std::cout << "The file is empty\n";
+        std::cout << "The file is empty or can't be opened\n";
         return 0;
     }
 
@@ -142,15 +132,15 @@ int main() {
     std::cin >> filename;
     std::optional<std::vector<std::string>> warTermsLines = readFile(filename);
     if (warTermsLines == std::nullopt) {
-        std::cout << "The file is empty\n";
+        std::cout << "The file is empty or can't be opened\n";
         return 0;
     }
 
-    std::cout << " enter the name of the war terms file: ";
+    std::cout << " enter the name of the peace terms file: ";
     std::cin >> filename;
     std::optional<std::vector<std::string>> peaceTermsLines = readFile(filename);
     if (peaceTermsLines == std::nullopt) {
-        std::cout << "The file is empty\n";
+        std::cout << "The file is empty or can't be opened\n";
         return 0;
     }
 
@@ -173,26 +163,7 @@ int main() {
     }
 
     std::vector<std::vector<std::string>> chapters = splitIntoChapters(bookWords);
-
-    int chapterNumber = 1;
-
-    for (const auto& chapter : chapters) {
-        auto [peaceWords, warWords] = filterWords(chapter, peaceTermsWords, warTermsWords);
-        double peaceDensity = calculateTermDensity(chapter, peaceWords);
-        double warDensity = calculateTermDensity(chapter, warWords);
-        // peaceDensities.push_back(peaceDensity);
-        // warDensities.push_back(warDensity);
-
-        std::cout << "Chapter " << chapterNumber << ": ";
-
-        if (warDensity > peaceDensity) {
-            std::cout << "war-related\n";
-        } else {
-            std::cout << "peace-related\n";
-        }
-
-        chapterNumber++;
-    }
+    categorize_chapters(chapters, peaceTermsWords, warTermsWords);
 
     return 0;
 }

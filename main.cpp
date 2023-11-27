@@ -51,6 +51,7 @@ auto tokenizeText = [](const std::string& text) -> std::vector<std::string> {
 };
 
 auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::vector<std::vector<std::string>> {
+    int count = 0;
     std::vector<std::vector<std::string>> chapters;
     std::vector<std::string> chapter;
     // split chapters and put into chapters vector by finding the word first "chapter" and ending the chapter when the next "chapter" is found
@@ -58,6 +59,7 @@ auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::v
         if (word.find("CHAPTER") != std::string::npos) {
             if (!chapter.empty()) {
                 chapters.push_back(chapter);
+                count++;
                 chapter.clear();
             }
         }
@@ -68,7 +70,7 @@ auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::v
     }
     //remove the first chapter because it is the title
     chapters.erase(chapters.begin());
-
+    std::cout << "The book has " << count << " chapters\n";
     return chapters;
 };
 
@@ -101,13 +103,13 @@ auto calculateTermDensity = [](const std::vector<std::string>& words, const std:
 
 auto categorize_chapters = [](const std::vector<std::vector<std::string>>& chapters, const std::vector<std::string>& peaceTerms, const std::vector<std::string>& warTerms) -> void {
 
-    auto indexes = std::ranges::views::iota(0, std::ranges::ssize(chapters)-1);
+    auto indexes = std::ranges::views::iota(0, std::ranges::ssize(chapters));
     std::ranges::for_each(indexes, [&chapters, &peaceTerms, &warTerms](int i) -> void {
         auto [peaceWords, warWords] = filterWords(chapters[i], peaceTerms, warTerms);
         double peaceDensity = calculateTermDensity(chapters[i], peaceWords);
         double warDensity = calculateTermDensity(chapters[i], warWords);
 
-        std::cout << "Chapter " << i << ": ";
+        std::cout << "Chapter " << i+1 << ": ";
         if (warDensity > peaceDensity) {
             std::cout << "war-related\n";
         } else {

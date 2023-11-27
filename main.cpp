@@ -109,7 +109,7 @@ auto categorize_chapters = [](const std::vector<std::vector<std::string>>& chapt
         double warDensity = calculateTermDensity(chapters[i], warWords);
 
         std::cout << "Chapter " << i+1 << ": ";
-        if (warDensity > peaceDensity) {
+        if (warDensity >= peaceDensity) {
             std::cout << "war-related\n";
         } else {
             std::cout << "peace-related\n";

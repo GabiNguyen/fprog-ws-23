@@ -1,13 +1,5 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <iterator>
-#include <ranges>
-#include <map>
-#include <optional>
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
 
 auto readFile = [](const std::string& filename) -> std::optional<std::vector<std::string>> {
     //check if the file exists
@@ -118,54 +110,102 @@ auto categorize_chapters = [](const std::vector<std::vector<std::string>>& chapt
 
 };
 
-int main() {
-    std::string filename;
+// Test readFile function
+TEST_CASE("ReadFileTest - FileExists") {
+    // Create a test file with content
+    std::ofstream testFile("test.txt");
+    testFile << "Sample text\n";
+    testFile.close();
 
-    std::cout << " enter the name of the book file: ";
-    std::cin >> filename;
-    std::optional<std::vector<std::string>> bookLines = readFile(filename);
-    if (bookLines == std::nullopt) {
-        std::cout << "The file is empty or can't be opened\n";
-        return 0;
-    }
+    auto result = readFile("test.txt");
 
-    std::cout << " enter the name of the war terms file: ";
-    std::cin >> filename;
-    std::optional<std::vector<std::string>> warTermsLines = readFile(filename);
-    if (warTermsLines == std::nullopt) {
-        std::cout << "The file is empty or can't be opened\n";
-        return 0;
-    }
+    REQUIRE(result.has_value());
+    REQUIRE_EQ(result.value().size(), 1);
+    REQUIRE_EQ(result.value()[0], "Sample text");
 
-    std::cout << " enter the name of the peace terms file: ";
-    std::cin >> filename;
-    std::optional<std::vector<std::string>> peaceTermsLines = readFile(filename);
-    if (peaceTermsLines == std::nullopt) {
-        std::cout << "The file is empty or can't be opened\n";
-        return 0;
-    }
-
-    std::vector<std::string> bookWords;
-    for (const auto& line : bookLines.value()) {
-        std::vector<std::string> tokens = tokenizeText(line);
-        bookWords.insert(bookWords.end(), tokens.begin(), tokens.end());
-    }
-
-    std::vector<std::string> warTermsWords;
-    for (const auto& line : warTermsLines.value()) {
-        std::vector<std::string> tokens = tokenizeText(line);
-        warTermsWords.insert(warTermsWords.end(), tokens.begin(), tokens.end());
-    }
-
-    std::vector<std::string> peaceTermsWords;
-    for (const auto& line : peaceTermsLines.value()) {
-        std::vector<std::string> tokens = tokenizeText(line);
-        peaceTermsWords.insert(peaceTermsWords.end(), tokens.begin(), tokens.end());
-    }
-
-    std::vector<std::vector<std::string>> chapters = splitIntoChapters(bookWords);
-    categorize_chapters(chapters, peaceTermsWords, warTermsWords);
-
-    return 0;
+    // Remove the test file
+    std::remove("test.txt");
 }
 
+// Test tokenizeText function
+TEST_CASE("TokenizeTextTest - TokenizeWords") {
+    std::string text = "This is a sample text!";
+
+    auto result = tokenizeText(text);
+
+    REQUIRE_EQ(result.size(), 5);
+    REQUIRE_EQ(result[0], "This");
+    REQUIRE_EQ(result[1], "is");
+    REQUIRE_EQ(result[2], "a");
+    REQUIRE_EQ(result[3], "sample");
+    REQUIRE_EQ(result[4], "text");
+}
+
+// Test splitIntoChapters function
+TEST_CASE("SplitIntoChaptersTest - SplitChapters") {
+    std::vector<std::string> bookWords = {"Intro", "CHAPTER", "One", "CHAPTER", "Two", "CHAPTER", "Three" };
+
+    auto result = splitIntoChapters(bookWords);
+
+    REQUIRE_EQ(result.size(), 3);
+    REQUIRE_EQ(result[0].size(), 2);
+    REQUIRE_EQ(result[1].size(), 2);
+    REQUIRE_EQ(result[2].size(), 2);
+    REQUIRE_EQ(result[0][0], "CHAPTER");
+    REQUIRE_EQ(result[1][0], "CHAPTER");
+    REQUIRE_EQ(result[2][0], "CHAPTER");
+    REQUIRE_EQ(result[0][1], "One");
+    REQUIRE_EQ(result[1][1], "Two");
+    REQUIRE_EQ(result[2][1], "Three");
+}
+
+// Test filterWords function
+TEST_CASE("FilterWordsTest - FilterTerms") {
+    std::vector<std::string> words = { "peace", "war", "love", "hate" };
+    std::vector<std::string> peaceTerms = { "peace", "love" };
+    std::vector<std::string> warTerms = { "war", "hate" };
+
+    auto result = filterWords(words, peaceTerms, warTerms);
+
+    REQUIRE_EQ(result.first.size(), 2);
+    REQUIRE_EQ(result.second.size(), 2);
+    REQUIRE_EQ(result.first[0], "peace");
+    REQUIRE_EQ(result.first[1], "love");
+    REQUIRE_EQ(result.second[0], "war");
+    REQUIRE_EQ(result.second[1], "hate");
+}
+
+// Test calculateTermDensity function
+TEST_CASE("CalculateTermDensityTest - CalculateDensity") {
+    std::vector<std::string> words = { "peace", "war", "love", "hate" };
+    std::vector<std::string> terms = { "peace", "love" };
+
+    auto result = calculateTermDensity(words, terms);
+
+    REQUIRE_EQ(result, 0.5);
+}
+
+// Test categorize_chapters function
+TEST_CASE("CategorizeChaptersTest - Categorize") {
+    std::vector<std::vector<std::string>> chapters = {
+        {"war", "peace", "love"},
+        {"war", "war", "hate"},
+        {"peace", "peace", "peace"}
+    };
+    std::vector<std::string> peaceTerms = { "peace", "love" };
+    std::vector<std::string> warTerms = { "war", "hate" };
+
+    // Redirect cout to a stringstream for testing output
+    std::stringstream ss;
+    std::streambuf* originalCoutStream = std::cout.rdbuf();
+    std::cout.rdbuf(ss.rdbuf());
+
+    categorize_chapters(chapters, peaceTerms, warTerms);
+
+    std::cout.rdbuf(originalCoutStream); // Restore cout
+
+    std::string output = ss.str();
+    REQUIRE_NE(output.find("war-related"), std::string::npos);
+    REQUIRE_NE(output.find("peace-related"), std::string::npos);
+    REQUIRE_EQ(std::count(output.begin(), output.end(), '\n'), 3); // Check for 3 chapters in output
+}

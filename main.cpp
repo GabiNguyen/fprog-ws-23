@@ -70,7 +70,6 @@ auto splitIntoChapters = [](const std::vector<std::string>& bookWords) -> std::v
     }
     //remove the first chapter because it is the title
     chapters.erase(chapters.begin());
-    std::cout << "The book has " << count << " chapters\n";
     return chapters;
 };
 
